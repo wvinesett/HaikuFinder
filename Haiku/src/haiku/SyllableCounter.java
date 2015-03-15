@@ -1,15 +1,16 @@
 package haiku;
 
+import java.util.HashMap;
+import java.io.*;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.io.*;
+
 /**
- * <code>SyllableCounter</code> provides a rudimentary means of finding the number of syllables in an English word.
- * The algorithm used is as follows.  <del>Given a <code>String</code>, extract its substrings that contain only vowels.
- * The number of these all-vowel substrings is the number of syllables in the word.  The letter 'y' is  considered a vowel
- * only if there are no other vowels.  The algorithm works on only a subset of English words.  Obvious problems include words
- * ending in 'e', words whose only vowel is a 'y', and words where syllable breaks occur between adjacent vowels (ex. "malleable").</del>
+ * <code>SyllableCounter</code> provides a dictionary of English words found <a href='http://www.gutenberg.org/ebooks/3204'>here<a>.
+ * The dictionary is used as a lookup table to find the number of syllables in a word.  If the word is not contained in the dictionary,
+ * a rudimentary means of finding the number of syllables is provided by this class.
+ * The algorithm used is as follows. 
  * First, the number of vowels in the word are counted.  To this, add the number of 'y's that sound like vowels.  Next, subtract 
  * the number of silent vowels, and the number of diphthrongs and triphthrongs that are found in the word.  Finally, add 1 if
  * the word ends in "le" or "les".  
@@ -22,7 +23,14 @@ import java.io.*;
  */
 public class SyllableCounter {
 	private String word = "";
+	private static final HashMap<String, Integer> DICTIONARY = new HashMap<>(42443);
+	static {
+		if (DICTIONARY.size() == 0){
+			loadDictionary();
+		}
+	}
 
+	
 	/**
 	 * Sets the word contained by this <code>SyllableCounter</code> instance.
 	 * @param word The string whose syllables will be counted on the next invocation of <code>countSyllables()</code>.
@@ -30,14 +38,14 @@ public class SyllableCounter {
 	 */
 	public void setWord(String word){
 		if (word != null){
-			this.word = word.toLowerCase();
+			this.word = stripPunctuation(word.toLowerCase());
 		}
 	}
 	
 	@Deprecated
 	/**
 	 * Returns the number of syllables in the word this <code>SyllableCounter</code> contains.  Syllables
-	 * are counted by determining the number of all-vowel substrings in the word being checked.
+	 * are counted by determining the number of all-vowel substrings in the word being checked.  
 	 * @return The number of syllables in the word contained by this <code>SyllableCounter</code>.
 	 * @deprecated Replaced by the more correct & robust algorithm used by <code>countSyllables()</code>.
 	 * @since Version 1.0
@@ -55,11 +63,35 @@ public class SyllableCounter {
 	
 	/**
 	 * Counts and returns the number of syllables in this <code>SyllableCounter</code>'s current word.
-	 * Syllables are counted using the algorithm described in the description of the <code>SyllableCounter</code>
-	 * class.
+	 * If the word is not found in the dictionary, the dictionary is checked to see if the word is a plural or past-tense
+	 * form of a word in the dictionary.  If this check also fails, or if the dictionary could not be loaded,
+	 * the syllable counting algorithm is used.  The word is then added to the dictionary.  The algorithm is described 
+	 * in the description of the <code>SyllableCounter</code> class.
 	 * @return The number of syllables found in this <code>SyllableCounter</code>'s word.
 	 */
 	public int countSyllables(){
+		// check the dictionary for the word, or its singular or present-tense form
+		if (DICTIONARY.containsKey(word)){
+			return DICTIONARY.get(word);
+		}
+		if (word.length() >= 2){
+			String root = word.substring(0, word.length() - 2);
+			if (DICTIONARY.containsKey(root)){ 
+				if (word.endsWith("ed")){
+					return DICTIONARY.get(root);
+				}
+				else if (word.endsWith("es")){
+					return DICTIONARY.get(root) + 1;
+				}
+			}
+		}
+	
+		String root = word.substring(0, word.length() - 1);
+		if (DICTIONARY.containsKey(root) && word.endsWith("s")){
+			return DICTIONARY.get(root);
+		}
+		
+		String original = new String(word);
 //		http://www.howmanysyllables.com/howtocountsyllables.html
 		int num = 0;
 		// step 1: count the number of vowels
@@ -80,6 +112,7 @@ public class SyllableCounter {
 		// step 5: add 1 if the word ends in "le" or "les"
 		if (word.matches("[a-z]+les?"))
 			num++;
+		DICTIONARY.put(original, num);
 		return num;
 	}
 	
@@ -141,6 +174,32 @@ public class SyllableCounter {
 	}
 	
 	/**
+	 * Removes periods, apostrophes, and other punctuation from parameter <code>s</code>.
+	 * @param s The word to be removed of punctuation characters.
+	 * @return A copy of <code>s</code> with punctuation characters removed.
+	 * @since Version 2.1
+	 */
+	private static String stripPunctuation(String s){
+		StringBuilder stripped = new StringBuilder();
+		for(int i = 0; i < s.length(); i++){
+			if (!isPunctuationCharacter(s.charAt(i))){
+				stripped.append(s.charAt(i));
+			}
+		}
+		return stripped.toString();
+	}
+	
+	/**
+	 * Checks if parameter <code>c</code> is a punctuation character.
+	 * @param c The character to check.
+	 * @return <code>true</code> if <code>c</code> is an exclamation point, period, question mark, comma, colon, semicolon, 
+	 * apostrophe, or quotation mark.
+	 */
+	private static boolean isPunctuationCharacter(char c){
+		return c == '!' || c == '.' || c == '?' || c == ',' || c == ':' || c == ';' || c == '"' || c == '\''; 
+	}
+	
+	/**
 	 * Returns whether or not parameter <code>c</code> is a vowel.
 	 * @param c The character to check.
 	 * @return <code>true</code> if <code>c</code> is 'a', 'e', 'i', 'o', or 'u'.
@@ -148,5 +207,29 @@ public class SyllableCounter {
 	 */
 	private static boolean isVowel(char c){
 		return c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u';
+	}
+	
+	/**
+	 * Reads the dictionary file into a lookup table implemented as a HashMap.  The table maps each English word in the dictionary
+	 * to its number of syllables.
+	 * @since Version 2.1
+	 */
+	private static void loadDictionary(){
+		try(BufferedReader br = new BufferedReader(new FileReader("bin/haiku/dictionary.txt"))){
+			String line = "";
+			while ((line = br.readLine()) != null){
+				StringTokenizer st = new StringTokenizer(line, "=");
+				String word = st.nextToken();
+				String hyph = st.nextToken();
+				int syllables = new StringTokenizer(hyph, "-").countTokens();
+				DICTIONARY.put(word, syllables);
+			}
+		}
+		catch (FileNotFoundException fnfe){
+			System.err.println("Could not find the dictionary.");
+		}
+		catch (IOException ioe){
+			System.err.println("Could not load the dictionary.");
+		}
 	}
 }
