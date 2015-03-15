@@ -119,7 +119,7 @@ public class HaikuFinder {
 	}
 	
 	/**
-	 * Checks if the provided string is a word.  A word is defined as a sequence of only letters.  Thus,
+	 * Checks if the provided string is a word.  A word is defined as a sequence letters and punctuation.  Thus,
 	 * if a word from a text file is formatted with other characters to denote bold, italics, etc in
 	 * the original printed source, it will not be considered in the haiku check.  
 	 * @param s The string to be checked.
@@ -127,7 +127,7 @@ public class HaikuFinder {
 	 * @since Version 1.0
 	 */
 	private boolean isWord(String s){
-		return s.matches("[a-zA-Z]+");
+		return s.matches("[a-zA-Z,.;:'\"!?]+");
 	}
 	
 }

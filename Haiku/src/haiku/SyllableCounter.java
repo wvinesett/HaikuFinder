@@ -86,11 +86,13 @@ public class SyllableCounter {
 			}
 		}
 	
-		String root = word.substring(0, word.length() - 1);
-		if (DICTIONARY.containsKey(root) && word.endsWith("s")){
-			return DICTIONARY.get(root);
+		if (word.length() >= 1){
+			String root = word.substring(0, word.length() - 1);
+			if (DICTIONARY.containsKey(root) && word.endsWith("s")){
+				return DICTIONARY.get(root);
+			}
 		}
-		
+
 		String original = new String(word);
 //		http://www.howmanysyllables.com/howtocountsyllables.html
 		int num = 0;
