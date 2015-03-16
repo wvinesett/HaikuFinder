@@ -13,7 +13,12 @@ public class HaikuFinder {
 	private SyllableCounter counter = new SyllableCounter();
 
 	public static void main(String[] args) {
-		new HaikuFinder("bin/haiku/kant.txt");
+		String path;// = "bin/haiku/kant.txt";
+		java.util.Scanner kb = new java.util.Scanner(System.in);
+		System.out.print("Enter a plain text file path: ");
+		path = kb.nextLine();
+		kb.close();
+		new HaikuFinder(path);
 	}
 	
 	/**
@@ -62,9 +67,9 @@ public class HaikuFinder {
 	private void findHaikus(){
 		int line1Count, line2Count, line3Count;
 		int numHaikus = 0;
-		StringBuilder line1 = new StringBuilder();
-		StringBuilder line2 = new StringBuilder();
-		StringBuilder line3 = new StringBuilder();
+//		StringBuilder line1 = new StringBuilder();
+//		StringBuilder line2 = new StringBuilder();
+//		StringBuilder line3 = new StringBuilder();
 		for (int i = 0; i < words.size(); i++){
 			if (! isWord(words.get(i))){
 				continue;	
@@ -75,12 +80,12 @@ public class HaikuFinder {
 				continue;	// haiku cannot start at words[i]
 			}
 			// reset the lines for this iteration
-			line1.delete(0, line1.length());
-			line2.delete(0, line2.length());
-			line3.delete(0, line3.length());
+//			line1.delete(0, line1.length());
+//			line2.delete(0, line2.length());
+//			line3.delete(0, line3.length());
 			
 			line1Count = count;
-			line1.append(words.get(i)).append(" ");
+//			line1.append(words.get(i)).append(" ");
 			line2Count = line3Count = 0;
 			// check if a haiku starts at words[i]
 			for(int j = i + 1; j < words.size(); j++){
@@ -91,23 +96,23 @@ public class HaikuFinder {
 				count = counter.countSyllables();
 				if (count + line1Count <= 5){ // fill line 1
 					line1Count += count;
-					line1.append(words.get(j)).append(" ");
+//					line1.append(words.get(j)).append(" ");
 				}
 				else if (count + line2Count <= 7 && line1Count == 5){ // fill line 2
 					line2Count += count;
-					line2.append(words.get(j)).append(" ");
+//					line2.append(words.get(j)).append(" ");
 				}
 				else if (count + line3Count <= 5 && line2Count == 7 && line1Count == 5){ // fill line 3
 					line3Count += count;
-					line3.append(words.get(j)).append(" ");
+//					line3.append(words.get(j)).append(" ");
 				}
 				else if (line1Count == 5 && line2Count == 7 && line3Count == 5){ // found haiku at words[i : k - 1]
-					System.out.println(line1);
-					System.out.println(line2);
-					System.out.println(line3);
-//					for (int k = i; k < j; k++){
-//						System.out.print(words.get(k) + " ");
-//					}
+//					System.out.println(line1);
+//					System.out.println(line2);
+//					System.out.println(line3);
+					for (int k = i; k < j; k++){
+						System.out.print(words.get(k) + " ");
+					}
 					System.out.println();
 					numHaikus++;
 					break;
